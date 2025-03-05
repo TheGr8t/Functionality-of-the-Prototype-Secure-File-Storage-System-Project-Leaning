@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Storage Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to Secure File Storage</h1>
+
+    <div id="auth-section">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <br>
+        <h2>Don't have an account?</h2>
+        <button onclick="showRegisterSection()">Register here</button>
+    </div>
+
+    <div id="register-section" style="display: none;">
+        <h2>Register</h2>
+        <input type="text" id="reg-username" placeholder="Username">
+        <input type="password" id="reg-password" placeholder="Password">
+        <button onclick="register()">Register</button>
+        <button onclick="hideRegisterSection()">Back to Login</button>
+    </div>
+
+    <div id="file-section" style="display: none;">
+        <h2>Upload File</h2>
+        <input type="file" id="fileInput">
+        <button onclick="uploadFile()">Upload</button>
+        <p id="upload-status"></p>
+
+        <h2>Download File</h2>
+        <select id="fileList"></select>
+        <button onclick="downloadFile()">Download</button>
+        <p id="download-status"></p>
+
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        let token = localStorage.getItem("jwt");
+
+        // Check if logged in
+        if (token) {
+            document.getElementById("auth-section").style.display = "none";
+            document.getElementById("file-section").style.display = "block";
+            loadFiles();
+        }
+
+        async function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("http://127.0.0.1:5000/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: username + "@example.com", password })
+            });
+
+            const data = await response.json();
+            if (data.access_token) {
+                localStorage.setItem("jwt", data.access_token);
+                alert("Login successful!");
+                window.location.reload();
+            } else {
+                alert(data.error || "Login failed!");
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById("reg-username").value;
+            const password = document.getElementById("reg-password").value;
+
+            if (!username || !password) {
+                alert("All fields are required!");
+                return;
+            }
+
+            const response = await fetch("http://127.0.0.1:5000/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+            if (data.message) {
+                alert("Registration successful!");
+                hideRegisterSection();
+            } else {
+                alert(data.error || "Registration failed!");
+            }
+        }
+
+        function showRegisterSection() {
+            document.getElementById("auth-section").style.display = "none";
+            document.getElementById("register-section").style.display = "block";
+        }
+
+        function hideRegisterSection() {
+            document.getElementById("register-section").style.display = "none";
+            document.getElementById("auth-section").style.display = "block";
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("http://127.0.0.1:5000/api/files/upload", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${localStorage.getItem("jwt")}` },
+                body: formData
+            });
+
+            const data = await response.json();
+            document.getElementById("upload-status").innerText = data.message || data.error;
+            loadFiles();
+        }
+
+        async function loadFiles() {
+            const response = await fetch("http://127.0.0.1:5000/api/files/list", {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${localStorage.getItem("jwt")}` }
+            });
+
+            const files = await response.json();
+            const fileList = document.getElementById("fileList");
+            fileList.innerHTML = "";  
+
+            files.forEach(file => {
+                let option = document.createElement("option");
+                option.value = file.id;
+                option.textContent = file.filename;
+                fileList.appendChild(option);
+            });
+        }
+
+        async function downloadFile() {
+            const fileId = document.getElementById("fileList").value;
+            if (!fileId) {
+                alert("Please select a file.");
+                return;
+            }
+
+            const response = await fetch(`http://127.0.0.1:5000/api/files/download/${fileId}`, {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${localStorage.getItem("jwt")}` }
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "downloaded_file";
+                link.click();
+            } else {
+                alert("File not found.");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("jwt");
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>

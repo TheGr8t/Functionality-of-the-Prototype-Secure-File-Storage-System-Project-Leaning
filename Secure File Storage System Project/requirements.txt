@@ -1,0 +1,48 @@
+
+flask
+flask-jwt-extended
+flask-cors
+pymysql
+werkzeug
+gunicorn
+cryptography
+authlib
+stripe
+
+
+
+
+
+Postman
+MySQL
+php
+Python
+
+
+
+pip install flask                   # Web framework
+pip install flask-bcrypt            # Password hashing
+pip install flask-jwt-extended      # JWT authentication
+pip install flask-cors              # Cross-Origin Resource Sharing (CORS) support
+pip install flask-mysql             # MySQL support for Flask
+pip install mysql-connector-python  # Connect Flask with MySQL
+pip install cryptography            # Encrypt & decrypt files
+pip install python-dotenv           # Load environment variables from .env
+pip install werkzeug                # Secure file uploads and request handling
+
+
+Or 
+
+pip install flask flask-bcrypt flask-jwt-extended flask-cors flask-mysql mysql-connector-python cryptography python-dotenv werkzeug pyjwt pymysql
+
+
+
+
+
+
+Hope it works on your end!!!!
+
+
+Also please watch this video if you haven't thanks!!
+
+https://youtu.be/7No6arlip6g

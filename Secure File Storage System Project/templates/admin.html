@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h1>Admin Dashboard</h1>
+    <div id="metrics"></div>
+    <script>
+        fetch('/api/admin/dashboard', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("metrics").innerHTML = JSON.stringify(data, null, 4);
+        });
+    </script>
+</body>
+</html>

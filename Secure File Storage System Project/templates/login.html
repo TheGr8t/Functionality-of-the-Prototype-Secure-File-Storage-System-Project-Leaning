@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h1>Login</h1>
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <p id="login-status"></p>
+    <p>Don't have an account? <a href="register.html">Register here</a></p>
+
+    <script>
+        document.getElementById("loginForm").onsubmit = async function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("http://127.0.0.1:5000/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: username + "@example.com", password })
+            });
+
+            const data = await response.json();
+
+            if (data.access_token) {
+                localStorage.setItem("jwt", data.access_token);  // ✅ Store JWT token
+                alert("Login successful!");
+                window.location.href = "index.html";  // Redirect to file dashboard
+            } else {
+                alert(data.error || "Login failed!");
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to Secure File Storage</h1>
+    
+    <button onclick="logout()">Logout</button>
+
+    <h2>Upload File</h2>
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">Upload</button>
+    <p id="upload-status"></p>
+
+    <h2>My Files</h2>
+    <select id="fileList"></select>
+    <button onclick="downloadFile()">Download</button>
+    <button onclick="deleteFile()">Delete</button>
+    <p id="download-status"></p>
+
+    <script>
+        let token = localStorage.getItem("jwt");
+
+        if (!token) {
+            alert("Please log in first.");
+            window.location.href = "login.html";
+        }
+
+        async function uploadFile() {
+            let fileInput = document.getElementById("fileInput");
+            let file = fileInput.files[0];
+
+            if (!file) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", file);
+
+            let response = await fetch("http://127.0.0.1:5000/api/files/upload", {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${token}` },
+                body: formData
+            });
+
+            let data = await response.json();
+            alert(data.message || data.error);
+            loadFiles();
+        }
+
+        async function loadFiles() {
+            let response = await fetch("http://127.0.0.1:5000/api/files/list", {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            let files = await response.json();
+            let fileList = document.getElementById("fileList");
+            fileList.innerHTML = "";
+
+            files.forEach(file => {
+                let option = document.createElement("option");
+                option.value = file.id;
+                option.textContent = file.filename;
+                fileList.appendChild(option);
+            });
+        }
+
+        async function downloadFile() {
+            let fileId = document.getElementById("fileList").value;
+
+            if (!fileId) {
+                alert("Please select a file.");
+                return;
+            }
+
+            let response = await fetch(`http://127.0.0.1:5000/api/files/download/${fileId}`, {
+                method: "GET",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                let blob = await response.blob();
+                let link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "downloaded_file";
+                link.click();
+            } else {
+                alert("File not found.");
+            }
+        }
+
+        async function deleteFile() {
+            let fileId = document.getElementById("fileList").value;
+
+            if (!fileId) {
+                alert("Please select a file.");
+                return;
+            }
+
+            let response = await fetch(`http://127.0.0.1:5000/api/files/delete/${fileId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            let data = await response.json();
+            alert(data.message || data.error);
+            loadFiles();
+        }
+
+        function logout() {
+            localStorage.removeItem("jwt");
+            window.location.href = "login.html";
+        }
+
+        window.onload = loadFiles;
+    </script>
+</body>
+</html>
